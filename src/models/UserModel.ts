@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 export interface UserDocument extends mongoose.Document {
   name: string;
@@ -20,6 +21,13 @@ const UserSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+UserSchema.pre<UserDocument>("save", function (next) {
+  if (!this.isModified("password")) next();
+
+  this.password = bcrypt.hashSync(this.password);
+  next();
+});
 
 const User = mongoose.model<UserDocument>("User", UserSchema);
 
