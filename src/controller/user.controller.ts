@@ -22,4 +22,19 @@ export async function signup(req: Request, res: Response) {
   }
 }
 
-export async function login(req: Request, res: Response) {}
+export async function login(req: Request, res: Response) {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).json({ message: "کاربری یافت نشد" });
+    }
+    const isMatch = user.comparePassword(req.body.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "رمز عبور اشتباه است" });
+    }
+    const token = signToken(user);
+    res.status(200).json({ token });
+  } catch (err) {
+    res.status(500).send("oh");
+  }
+}
