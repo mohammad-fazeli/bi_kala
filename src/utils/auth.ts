@@ -9,7 +9,7 @@ export const signToken = (user: UserDocument) => {
       email: user.email,
       isAdmin: user.isAdmin,
     },
-    process.env.JWT_SECRET || "JWT_SECRET",
+    process.env.JWT_SECRET as string,
     {
       expiresIn: "30d",
     }
