@@ -1,5 +1,5 @@
 {
-  "name": "online_shop",
+  "name": "bikala",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -7,6 +7,7 @@
     "dev": "nodemon --config nodemon.json src/server.ts"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
     "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^17.0.23",
@@ -15,7 +16,6 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "@types/bcryptjs": "^2.4.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
