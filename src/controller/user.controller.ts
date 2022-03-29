@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/UserModel";
+import User from "../models/user.model";
 import { signToken } from "../utils/auth";
 
 export async function signup(req: Request, res: Response) {
