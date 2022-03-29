@@ -9,6 +9,11 @@
 # production
 /build
 
+#upluads
+/public/images/products/*.jpg
+/public/images/products/*.png
+/public/images/products/*.jpeg
+
 # misc
 .DS_Store
 .env.local
