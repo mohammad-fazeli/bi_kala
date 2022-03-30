@@ -230,3 +230,23 @@ export const deleteProduct = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getProduct = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findOne({ _id: id });
+    if (!product) {
+      return res.status(404).json({
+        message: "محصول مورد نظر یافت نشد",
+      });
+    }
+    res.status(200).json({
+      message: "محصول مورد نظر با موفقیت ارسال شد",
+      product,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "خطا در بارگذاری محصول",
+    });
+  }
+};
