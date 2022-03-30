@@ -6,7 +6,7 @@ import productRouter from "./routers/product.router";
 const app: Express = express();
 
 app.use(express.json({ limit: "10mb" }));
-
+app.use(express.static("public"));
 app.use("/api/user", userRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/product", productRouter);
