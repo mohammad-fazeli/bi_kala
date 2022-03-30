@@ -6,6 +6,7 @@ import {
   addCategorySchema,
   updateCategorySchema,
   deleteCategorySchema,
+  getCategorySchema,
 } from "../schemas/category.schema";
 import {
   addCategory,
@@ -32,6 +33,6 @@ router.delete(
 );
 
 router.get("/", getCategories);
-router.get("/:id", getCategory);
+router.get("/one/", validate(getCategorySchema), getCategory);
 
 export default router;

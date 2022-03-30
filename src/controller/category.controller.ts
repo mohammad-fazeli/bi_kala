@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Category from "../models/category.model";
+import Product from "../models/product.model";
 
 export const addCategory = async (req: Request, res: Response) => {
   const { name, parentId } = req.body;
@@ -130,7 +132,8 @@ export const getCategories = async (req: Request, res: Response) => {
 };
 
 export const getCategory = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { id, page, limit } = req.query;
+  const { filters = [], sort } = req.body;
   try {
     const categories = await Category.find({});
     const categoryList = createCategories(categories);
@@ -140,11 +143,90 @@ export const getCategory = async (req: Request, res: Response) => {
         message: "دسته بندی مورد نظر یافت نشد",
       });
     }
+    let search: object = {
+      category: { $in: new mongoose.Types.ObjectId(id as string) },
+    };
+    filters.forEach((filter: { finder: string; option: any[] }) => {
+      if (filter.finder == "brand") {
+        search = {
+          ...search,
+          brand: { $in: filter.option },
+        };
+      } else if (filter.finder == "price") {
+        search = {
+          ...search,
+          price: { $gte: filter.option[0], $lte: filter.option[1] },
+        };
+      } else if (filter.finder == "availability") {
+        search = {
+          ...search,
+          availability: filter.option,
+        };
+      } else if (filter.finder == "discount") {
+        if (filter.option[0]) {
+          search = {
+            ...search,
+            discount: { $nin: 0 },
+          };
+        }
+      } else {
+        search = {
+          ...search,
+          specification: {
+            $elemMatch: {
+              title: filter.finder,
+              value: { $in: filter.option },
+            },
+          },
+        };
+      }
+    });
+    let sort_query: object = {};
+    if (sort == "ارزان ترین") {
+      sort_query = {
+        price: 1,
+      };
+    } else if (sort == "گران ترین") {
+      sort_query = {
+        price: -1,
+      };
+    } else if (sort == "جدید ترین") {
+      sort_query = {
+        createdAt: -1,
+      };
+    } else if (sort == "پربازدیدترین") {
+      sort_query = {
+        views: -1,
+      };
+    } else if (sort == "پرفروش ترین") {
+      sort_query = {
+        sales: -1,
+      };
+    } else {
+      sort_query = {
+        createdAt: -1,
+      };
+    }
+
+    const products = await Product.find(
+      search,
+      {},
+      {
+        limit: parseInt(limit as string),
+        skip: (parseInt(page as string) - 1) * parseInt(limit as string),
+        sort: sort_query,
+      }
+    );
+    const result = {
+      ...category,
+      products,
+    };
     res.status(200).json({
-      message: "دسته بندی مورد نظر ارسال شد",
-      category,
+      message: "دسته بندی مورد نظر با موفقیت ارسال شد",
+      category: result,
     });
   } catch (err) {
+    console.log(err);
     res.status(500).json({
       message: "مشکلی در ارسال دسته بندی به وجود آمده است",
     });
