@@ -6,6 +6,8 @@ import {
   deleteProduct,
   updateProduct,
   getProduct,
+  addImage,
+  deleteImage,
 } from "../controller/product.controller";
 
 router.get("/:id", getProduct);
@@ -14,7 +16,7 @@ router.post("/", isAuth, isAdmin, addProduct);
 router.put("/:id", isAuth, isAdmin, updateProduct);
 router.delete("/:id", isAuth, isAdmin, deleteProduct);
 
-router.post("/gallery", isAuth, isAdmin);
-router.delete("/gallery", isAuth, isAdmin);
+router.post("/gallery/:id", isAuth, isAdmin, addImage);
+router.delete("/gallery/:id", isAuth, isAdmin, deleteImage);
 
 export default router;

@@ -278,3 +278,93 @@ export const getProduct = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const addImage = async (req: Request, res: Response) => {
+  uploadImages.single("gallery")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        message: "خطا در آپلود تصویر",
+      });
+    }
+    const { id } = req.params;
+
+    await sharp(req.file?.destination + "/" + req.file?.filename)
+      .resize({
+        width: 300,
+        height: 300,
+      })
+      .toFile(req.file?.destination + "/thumbnail-" + req.file?.filename);
+    try {
+      const product = await Product.findOneAndUpdate(
+        { _id: id },
+        {
+          $push: {
+            images: {
+              filename: req.file?.filename,
+              thumbnail: "thumbnail-" + req.file?.filename,
+            },
+          },
+        }
+      );
+      if (!product) {
+        removeFile({
+          image: [{ filename: req.file?.filename }],
+        });
+        return res.status(404).json({
+          message: "محصول مورد نظر یافت نشد",
+        });
+      }
+      res.status(200).json({
+        message: "تصویر با موفقیت اضافه شد",
+      });
+    } catch (err) {
+      removeFile({
+        image: [{ filename: req.file?.filename }],
+      });
+      res.status(500).json({
+        message: "خطا در بارگذاری تصویر",
+      });
+    }
+  });
+};
+
+export const deleteImage = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { filename } = req.body;
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        message: "محصول مورد نظر یافت نشد",
+      });
+    }
+    if (product.images.length === 1) {
+      return res.status(400).json({
+        message: "حداقل یک تصویر باید وجود داشته باشد",
+      });
+    }
+    const index = product.images.findIndex(
+      (image: any) => image.filename === filename
+    );
+    if (index === -1) {
+      return res.status(404).json({
+        message: "تصویر مورد نظر یافت نشد",
+      });
+    }
+    product.images.splice(index, 1);
+    await product.save();
+    removeFile({
+      gallery: [{ filename }],
+    });
+    res.status(200).json({
+      message: "تصویر مورد نظر با موفقیت حذف شد",
+    });
+  } catch (err) {
+    removeFile({
+      gallery: [{ filename }],
+    });
+    res.status(500).json({
+      message: "خطا در حذف تصویر",
+    });
+  }
+};
