@@ -6,6 +6,15 @@ export interface UserDocument extends mongoose.Document {
   email: string;
   password: string;
   isAdmin: boolean;
+  address: Array<string>;
+  cart: Array<{
+    id: String;
+    quantity: Number;
+    name: String;
+    price: Number;
+    discount: Number;
+    image: String;
+  }>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
@@ -17,6 +26,21 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, required: true, default: false },
+    address: { type: Array, required: true, default: [] },
+    cart: {
+      type: [
+        {
+          id: String,
+          quantity: Number,
+          name: String,
+          price: Number,
+          discount: Number,
+          image: String,
+        },
+      ],
+      required: true,
+      default: [],
+    },
   },
   {
     timestamps: true,

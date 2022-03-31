@@ -3,6 +3,7 @@ import userRouter from "./routers/user.router";
 import categoryRouter from "./routers/category.router";
 import productRouter from "./routers/product.router";
 import filterRouter from "./routers/filter.router";
+import cartRouter from "./routers/cart.router";
 
 const app: Express = express();
 
@@ -13,6 +14,7 @@ app.use("/api/user", userRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/product", productRouter);
 app.use("/api/filter", filterRouter);
+app.use("/api/cart", cartRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.sendStatus(200);
