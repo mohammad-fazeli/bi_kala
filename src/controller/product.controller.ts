@@ -360,9 +360,6 @@ export const deleteImage = async (req: Request, res: Response) => {
       message: "تصویر مورد نظر با موفقیت حذف شد",
     });
   } catch (err) {
-    removeFile({
-      gallery: [{ filename }],
-    });
     res.status(500).json({
       message: "خطا در حذف تصویر",
     });
