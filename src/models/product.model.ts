@@ -39,6 +39,8 @@ const productSchema = new mongoose.Schema(
     specification: {
       type: [{ title: { type: String }, value: { type: Array } }],
     },
+    views: { type: Number, required: true, default: 0 },
+    sales: { type: Number, required: true, default: 0 },
   },
   {
     timestamps: true,

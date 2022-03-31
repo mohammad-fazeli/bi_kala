@@ -240,6 +240,8 @@ export const getProduct = async (req: Request, res: Response) => {
         message: "محصول مورد نظر یافت نشد",
       });
     }
+    product.views += 1;
+    await product.save();
     res.status(200).json({
       message: "محصول مورد نظر با موفقیت ارسال شد",
       product,
