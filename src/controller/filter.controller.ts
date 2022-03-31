@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Category from "../models/category.model";
+import { setOptions } from "../services/filter.services";
 
 export const addFilter = async (req: Request, res: Response) => {
   const { title, finder, id } = req.body;
@@ -21,6 +22,7 @@ export const addFilter = async (req: Request, res: Response) => {
         message: "دسته بندی مورد نظر یافت نشد",
       });
     }
+    setOptions(finder, id);
     return res.status(200).send({
       message: "فیلتر با موفقیت اضافه شد",
       data: category,

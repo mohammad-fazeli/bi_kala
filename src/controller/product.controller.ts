@@ -5,6 +5,11 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 
+import {
+  updateFilter_addProduct,
+  updateFilter_removeProduct,
+} from "../services/filter.services";
+
 import Product from "../models/product.model";
 import Category from "../models/category.model";
 
@@ -138,6 +143,12 @@ export const addProduct = async (req: Request, res: Response) => {
         specification: specification_parse,
       });
       await newProduct.save();
+      updateFilter_addProduct({
+        brand: newProduct.brand,
+        category: newProduct.category,
+        price: newProduct.price,
+        specification: newProduct.specification,
+      });
       res.status(201).json({
         message: "محصول با موفقیت افزوده شد",
       });
@@ -189,6 +200,9 @@ export const updateProduct = async (req: Request, res: Response) => {
             review,
             specification: specification_parse,
           },
+        },
+        {
+          new: true,
         }
       );
       if (!product) {
@@ -196,6 +210,12 @@ export const updateProduct = async (req: Request, res: Response) => {
         return res.status(404).send("محصولی با این شناسه یافت نشد");
       }
       removeFile({ image: [{ filename: product.image }] });
+      updateFilter_addProduct({
+        brand: product.brand,
+        category: product.category,
+        price: product.price,
+        specification: product.specification,
+      });
       res.status(200).json({
         message: "محصول با موفقیت ویرایش شد",
       });
@@ -220,6 +240,12 @@ export const deleteProduct = async (req: Request, res: Response) => {
     removeFile({
       image: [{ filename: product.image }],
       gallery: product.images,
+    });
+    updateFilter_removeProduct({
+      brand: product.brand,
+      category: product.category,
+      price: product.price,
+      specification: product.specification,
     });
     res.status(200).json({
       message: "محصول مورد نظر با موفقیت حذف شد",
