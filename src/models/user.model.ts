@@ -6,7 +6,13 @@ export interface UserDocument extends mongoose.Document {
   email: string;
   password: string;
   isAdmin: boolean;
-  address: Array<string>;
+  address: Array<{
+    street: string;
+    city: string;
+    state: string;
+    alley: string;
+    HouseNumber: string;
+  }>;
   cart: Array<{
     id: String;
     quantity: Number;
@@ -26,7 +32,19 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, required: true, default: false },
-    address: { type: Array, required: true, default: [] },
+    address: {
+      type: [
+        {
+          street: String,
+          city: String,
+          state: String,
+          alley: String,
+          HouseNumber: String,
+        },
+      ],
+      required: true,
+      default: [],
+    },
     cart: {
       type: [
         {

@@ -28,3 +28,13 @@ export const loginUserSchema = object({
       .required("لطفا ایمیل را وارد کنید"),
   }),
 });
+
+export const addAddressSchema = object({
+  body: object({
+    street: string().required("لطفا خیابان را وارد کنید"),
+    city: string().required("لطفا شهر را وارد کنید"),
+    state: string().required("لطفا استان را وارد کنید"),
+    alley: string().required("لطفا کوچه را وارد کنید"),
+    HouseNumber: string().required("لطفا پلاک را وارد کنید"),
+  }),
+});
