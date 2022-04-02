@@ -9,8 +9,9 @@ import {
   retryPayment,
   cancelOrder,
 } from "../controller/checkout.controller";
+import { checkoutSchema } from "../schemas/checkout.schema";
 
-router.post("/", isAuth, checkout);
+router.post("/", isAuth, validate(checkoutSchema), checkout);
 router.get("/verify/:orderId", isAuth, verifyRequest);
 router.post("/changepayment/:orderId", isAuth, changePayment);
 router.post("/retry/:orderId", isAuth, retryPayment);

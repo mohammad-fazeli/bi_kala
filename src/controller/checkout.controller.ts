@@ -8,6 +8,11 @@ import { createOrder, updateProducts } from "../services/checkout.services";
 export const checkout = async (req: any, res: Response) => {
   try {
     const { address, paymentType } = req.body;
+    if (paymentType !== "online" || paymentType !== "cash") {
+      return res.status(400).json({
+        message: "نوع پرداخت را به درستی وارد کنید",
+      });
+    }
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).send({
@@ -62,11 +67,11 @@ export const checkout = async (req: any, res: Response) => {
       return res.status(200).json({
         token: token,
       });
+    } else if (paymentType === "cash") {
+      res.status(200).json({
+        message: "Order created",
+      });
     }
-    //empty cart
-    res.status(200).json({
-      message: "Order created",
-    });
   } catch (err) {
     res.status(500).json({
       message: "مشکلی در سرور پیش آمده است",
