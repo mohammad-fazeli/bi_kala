@@ -14,12 +14,12 @@ export interface UserDocument extends mongoose.Document {
     HouseNumber: string;
   }>;
   cart: Array<{
-    id: String;
-    quantity: Number;
-    name: String;
-    price: Number;
-    discount: Number;
-    image: String;
+    id: string;
+    quantity: number;
+    name: string;
+    price: number;
+    discount: number;
+    image: string;
   }>;
   createdAt: Date;
   updatedAt: Date;
