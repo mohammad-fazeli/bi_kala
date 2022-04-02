@@ -93,6 +93,15 @@ export const getCart = async (req: any, res: Response) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).send("کاربر مورد نظر یافت نشد");
+    user.cart.forEach(async (item, index) => {
+      const product = await Product.findById(item.id);
+      if (product) {
+        if (!product.availability) {
+          user.cart.splice(index, 1);
+        }
+      }
+      await product.save();
+    });
     res.status(200).json({ data: user.cart });
   } catch (err) {
     res.status(500).json({
