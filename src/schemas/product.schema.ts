@@ -15,3 +15,9 @@ export const addProductSchema = object({
     image: array().of(object({})).required("تصویر ارائه نشده است"),
   }),
 });
+
+export const addImageSchema = object({
+  files: object({
+    gallery: array().of(object({})).required("تصویر ارائه نشده است"),
+  }),
+});
