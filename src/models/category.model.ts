@@ -6,7 +6,7 @@ interface FiltersDocument {
   options: Array<any>;
   finder: string;
 }
-interface CategoryDocument extends mongoose.Document {
+export interface CategoryDocument extends mongoose.Document {
   name: string;
   parentId: mongoose.Types.ObjectId | null;
   filters: Array<FiltersDocument>;
