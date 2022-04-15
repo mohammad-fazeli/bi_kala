@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import sharp from "sharp";
 import { removeFiles } from "../utils/removeFile";
+import mongoose from "mongoose";
 
 import {
   updateFilter_addProduct,
@@ -227,6 +228,95 @@ export const getProduct = async (req: Request, res: Response) => {
   } catch (err) {
     return res.status(500).json({
       message: "خطا در بارگذاری محصول",
+    });
+  }
+};
+
+export const getProducts = async (req: Request, res: Response) => {
+  const { id, page, limit } = req.query;
+  const { filters = [], sort } = req.body;
+  try {
+    let search: object = {
+      category: { $in: new mongoose.Types.ObjectId(id as string) },
+    };
+    filters.forEach((filter: { finder: string; option: any[] }) => {
+      if (filter.finder == "brand") {
+        search = {
+          ...search,
+          brand: { $in: filter.option },
+        };
+      } else if (filter.finder == "price") {
+        search = {
+          ...search,
+          price: { $gte: filter.option[0], $lte: filter.option[1] },
+        };
+      } else if (filter.finder == "availability") {
+        search = {
+          ...search,
+          availability: filter.option,
+        };
+      } else if (filter.finder == "discount") {
+        if (filter.option[0]) {
+          search = {
+            ...search,
+            discount: { $nin: 0 },
+          };
+        }
+      } else {
+        search = {
+          ...search,
+          specification: {
+            $elemMatch: {
+              title: filter.finder,
+              value: { $in: filter.option },
+            },
+          },
+        };
+      }
+    });
+    let sort_query: object = {};
+    if (sort == "ارزان ترین") {
+      sort_query = {
+        price: 1,
+      };
+    } else if (sort == "گران ترین") {
+      sort_query = {
+        price: -1,
+      };
+    } else if (sort == "جدید ترین") {
+      sort_query = {
+        createdAt: -1,
+      };
+    } else if (sort == "پربازدیدترین") {
+      sort_query = {
+        views: -1,
+      };
+    } else if (sort == "پرفروش ترین") {
+      sort_query = {
+        sales: -1,
+      };
+    } else {
+      sort_query = {
+        createdAt: -1,
+      };
+    }
+
+    const products = await Product.find(
+      search,
+      {},
+      {
+        limit: parseInt(limit as string),
+        skip: (parseInt(page as string) - 1) * parseInt(limit as string),
+        sort: sort_query,
+      }
+    );
+    res.status(200).json({
+      products,
+      page,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "مشکلی در ارسال محصولات به وجود آمده است",
     });
   }
 };

@@ -7,6 +7,7 @@ import {
   deleteProduct,
   updateProduct,
   getProduct,
+  getProducts,
   addImage,
   deleteImage,
 } from "../controller/product.controller";
@@ -15,6 +16,7 @@ import { addProductSchema, addImageSchema } from "../schemas/product.schema";
 const router = express.Router();
 
 router.get("/:id", getProduct);
+router.get("/", getProducts);
 router.post(
   "/",
   isAuth,
