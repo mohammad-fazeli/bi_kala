@@ -5,28 +5,8 @@ import Product from "../models/product.model";
 
 export const addCategory = async (req: Request, res: Response) => {
   const { name, parentId } = req.body;
-  let categoryObj = {
-    name,
-    filter: [
-      { title: "برند", type: "checkbox", option: [], finder: "brand" },
-      {
-        title: "فقط کالاهای موجود",
-        type: "switch",
-        option: [false],
-        finder: "availability",
-      },
-      {
-        title: "فقط کالاهای دارای تخفیف",
-        type: "switch",
-        option: [false],
-        finder: "discount",
-      },
-      { title: "قیمت", type: "range", option: [0, 0], finder: "price" },
-    ],
-    parentId,
-  };
   try {
-    const newCategory = new Category(categoryObj);
+    const newCategory = new Category({ name, parentId });
     await newCategory.save();
     res.status(200).json({
       message: "دسته بندی با موفقیت اضافه شد",
