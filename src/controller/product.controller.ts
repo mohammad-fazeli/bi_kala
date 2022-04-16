@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
 import { removeFiles } from "../utils/removeFile";
 import { makeThumbnail } from "../utils/makeThumbnail";
-import {
-  updateFilter_addProduct,
-  updateFilter_removeProduct,
-} from "../services/filter.services";
+import Filter from "../services/filter.services";
 import Product from "../services/product.services";
+import filterServices from "../services/filter.services";
 
 export const addProduct = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -25,7 +23,7 @@ export const addProduct = async (req: Request, res: Response) => {
       review,
       specification: JSON.parse(specification),
     });
-    updateFilter_addProduct({
+    Filter.update_add({
       brand: newProduct.brand,
       categories: newProduct.categories,
       price: newProduct.price,
@@ -76,7 +74,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       specification: JSON.parse(specification),
     });
     removeFiles([product.image]);
-    updateFilter_addProduct({
+    Filter.update_add({
       brand: product.brand,
       categories: product.categories,
       price: product.price,
@@ -102,7 +100,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
       destinations.push(`/public/images/products/${image.thumbnail}`);
     }
     removeFiles(destinations);
-    updateFilter_removeProduct({
+    filterServices.update_remove({
       brand: product.brand,
       categories: product.categories,
       price: product.price,

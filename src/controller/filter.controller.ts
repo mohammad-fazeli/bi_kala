@@ -1,28 +1,10 @@
 import { Request, Response } from "express";
-import Category from "../models/category.model";
-import { setOptions } from "../services/filter.services";
+import Filter from "../services/filter.services";
 
 export const addFilter = async (req: Request, res: Response) => {
   const { title, finder, id } = req.body;
   try {
-    const category = await Category.findOneAndUpdate(
-      { _id: id },
-      {
-        $push: {
-          filter: {
-            title,
-            type: "checkbox",
-            finder,
-          },
-        },
-      }
-    );
-    if (!category) {
-      return res.status(404).send({
-        message: "دسته بندی مورد نظر یافت نشد",
-      });
-    }
-    setOptions(finder, id);
+    const category = await Filter.add(id, title, finder);
     return res.status(200).send({
       message: "فیلتر با موفقیت اضافه شد",
       data: category,
@@ -37,24 +19,10 @@ export const addFilter = async (req: Request, res: Response) => {
 export const updateFilter = async (req: Request, res: Response) => {
   const { title, finder, filterId } = req.body;
   try {
-    const category = await Category.findOneAndUpdate(
-      {
-        "filter._id": filterId,
-      },
-      {
-        $set: {
-          "filter.$.title": title,
-          "filter.$.finder": finder,
-        },
-      }
-    );
-    if (!category) {
-      return res.status(404).send({
-        message: "فیلتر مورد نظر یافت نشد",
-      });
-    }
+    const category = await Filter.update(filterId, title, finder);
     return res.status(200).send({
       message: "فیلتر با موفقیت ویرایش شد",
+      date: category,
     });
   } catch (err) {
     res.status(500).send({
@@ -66,23 +34,7 @@ export const updateFilter = async (req: Request, res: Response) => {
 export const deleteFilter = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    const category = await Category.findOneAndUpdate(
-      {
-        "filter._id": id,
-      },
-      {
-        $pull: {
-          filter: {
-            _id: id,
-          },
-        },
-      }
-    );
-    if (!category) {
-      return res.status(404).send({
-        message: "فیلتر مورد نظر یافت نشد",
-      });
-    }
+    await Filter.remove(id);
     return res.status(200).send({
       message: "فیلتر با موفقیت حذف شد",
     });
