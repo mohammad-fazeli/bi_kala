@@ -1,92 +1,33 @@
 import { Request, Response } from "express";
-import sharp from "sharp";
 import { removeFiles } from "../utils/removeFile";
-import mongoose from "mongoose";
-
+import { makeThumbnail } from "../utils/makeThumbnail";
 import {
   updateFilter_addProduct,
   updateFilter_removeProduct,
 } from "../services/filter.services";
-
-import Product from "../models/product.model";
-import Category from "../models/category.model";
-
-async function getAllParentId(id: string) {
-  try {
-    let ids = [];
-    const category = await Category.findById(id);
-    ids.push(category._id);
-    let parentId = category.parentId;
-    while (parentId) {
-      const parent = await Category.findById(parentId);
-      ids.push(parent._id);
-      parentId = parent.parentId;
-    }
-    return ids;
-  } catch (err) {
-    return false;
-  }
-}
+import Product from "../services/product.services";
 
 export const addProduct = async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const { id, name, brand, number, price, discount, review, specification } =
     req.body;
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  let gallery: Array<{ filename: string; thumbnail: string }> = [];
-  let specification_parse;
-  if (specification) {
-    try {
-      specification_parse = JSON.parse(specification);
-    } catch {
-      return res.status(400).json({
-        message: "مشخصات در قالب JSON نیست",
-      });
-    }
-  }
-  const categoryIds = await getAllParentId(id);
-  if (!categoryIds) {
-    let destinations: string[] = [];
-    Object.entries(files).forEach(([key, value]) => {
-      destinations = [
-        ...destinations,
-        ...value.map((file: any) => `${file.destination}/${file.filename}`),
-      ];
-    });
-    removeFiles(destinations);
-    return res.status(500).send("خطا در دریافت شناسه دسته بندی");
-  }
-
-  for (const file of files.gallery) {
-    await sharp(file.destination + "/" + file.filename)
-      .resize({
-        width: 300,
-        height: 300,
-      })
-      .toFile(file.destination + "/thumbnail-" + file.filename);
-    gallery.push({
-      filename: file.filename,
-      thumbnail: "thumbnail-" + file.filename,
-    });
-  }
-
   try {
-    const newProduct = new Product({
+    const gallery = await makeThumbnail(files.gallery);
+    const newProduct = await Product.add({
+      id,
       name,
       brand,
-      category: categoryIds,
-      availability: true,
       number,
       price,
       discount,
       image: files.image[0].filename,
       gallery,
       review,
-      specification: specification_parse,
+      specification: JSON.parse(specification),
     });
-    await newProduct.save();
     updateFilter_addProduct({
       brand: newProduct.brand,
-      category: newProduct.category,
+      categories: newProduct.categories,
       price: newProduct.price,
       specification: newProduct.specification,
     });
@@ -97,13 +38,10 @@ export const addProduct = async (req: Request, res: Response) => {
     let destinations: string[] = [];
     Object.entries(files).forEach(([key, value]) => {
       if (key === "gallery") {
-        destinations = [
-          ...destinations,
-          ...value.map((file: any) => `${file.destination}/${file.filename}`),
-          ...value.map(
-            (file: any) => `${file.destination}/thumbnail-${file.filename}`
-          ),
-        ];
+        value.forEach((file: any) => {
+          destinations.push(`${file.destination}/${file.filename}`);
+          destinations.push(`${file.destination}/thumbnail-${file.filename}`);
+        });
       } else {
         destinations = [
           ...destinations,
@@ -117,6 +55,7 @@ export const addProduct = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const updateProduct = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const image: string | undefined = files.image
@@ -125,43 +64,21 @@ export const updateProduct = async (req: Request, res: Response) => {
   const { name, brand, number, price, discount, review, specification } =
     req.body;
   const { id } = req.params;
-
-  let specification_parse;
-  if (specification) {
-    try {
-      specification_parse = JSON.parse(specification);
-    } catch (err) {
-      removeFiles([`/public/images/products/${image}`]);
-      return res.status(400).send("مشخصات در فرمت درست ارئه نشده است");
-    }
-  }
   try {
-    const product = await Product.findOneAndUpdate(
-      { _id: id },
-      {
-        $set: {
-          image,
-          name,
-          brand,
-          number,
-          price,
-          discount,
-          review,
-          specification: specification_parse,
-        },
-      },
-      {
-        new: true,
-      }
-    );
-    if (!product) {
-      removeFiles([`/public/images/products/${image}`]);
-      return res.status(404).send("محصولی با این شناسه یافت نشد");
-    }
+    const product = await Product.update(id, {
+      image,
+      name,
+      brand,
+      number,
+      price,
+      discount,
+      review,
+      specification: JSON.parse(specification),
+    });
     removeFiles([product.image]);
     updateFilter_addProduct({
       brand: product.brand,
-      category: product.category,
+      categories: product.categories,
       price: product.price,
       specification: product.specification,
     });
@@ -175,28 +92,19 @@ export const updateProduct = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const deleteProduct = async (req: Request, res: Response) => {
-  const { id } = req.params;
   try {
-    const product = await Product.findOneAndDelete({ _id: id });
-    if (!product) {
-      return res.status(404).json({
-        message: "محصول مورد نظر یافت نشد",
-      });
+    const product = await Product.delete(req.params.id);
+    let destinations = [product.image];
+    for (const image of product?.gallery) {
+      destinations.push(`/public/images/products/${image.filename}`);
+      destinations.push(`/public/images/products/${image.thumbnail}`);
     }
-    let destinations = [
-      ...product.gallery.map(
-        (image: any) => `/public/images/products/${image.filename}`
-      ),
-      ...product.gallery.map(
-        (image: any) => `/public/images/products/${image.thumbnail}`
-      ),
-      product.image,
-    ];
     removeFiles(destinations);
     updateFilter_removeProduct({
       brand: product.brand,
-      category: product.category,
+      categories: product.categories,
       price: product.price,
       specification: product.specification,
     });
@@ -211,16 +119,8 @@ export const deleteProduct = async (req: Request, res: Response) => {
 };
 
 export const getProduct = async (req: Request, res: Response) => {
-  const { id } = req.params;
   try {
-    const product = await Product.findOne({ _id: id });
-    if (!product) {
-      return res.status(404).json({
-        message: "محصول مورد نظر یافت نشد",
-      });
-    }
-    product.views += 1;
-    await product.save();
+    const product = await Product.getOne(req.params.id);
     res.status(200).json({
       message: "محصول مورد نظر با موفقیت ارسال شد",
       product,
@@ -233,82 +133,14 @@ export const getProduct = async (req: Request, res: Response) => {
 };
 
 export const getProducts = async (req: Request, res: Response) => {
-  const { id, page, limit } = req.query;
-  const { filters = [], sort } = req.body;
+  const { filters = [], sort, id, page, limit } = req.body;
   try {
-    let search: object = {
-      category: { $in: new mongoose.Types.ObjectId(id as string) },
-    };
-    filters.forEach((filter: { finder: string; option: any[] }) => {
-      if (filter.finder == "brand") {
-        search = {
-          ...search,
-          brand: { $in: filter.option },
-        };
-      } else if (filter.finder == "price") {
-        search = {
-          ...search,
-          price: { $gte: filter.option[0], $lte: filter.option[1] },
-        };
-      } else if (filter.finder == "availability") {
-        search = {
-          ...search,
-          availability: filter.option,
-        };
-      } else if (filter.finder == "discount") {
-        if (filter.option[0]) {
-          search = {
-            ...search,
-            discount: { $nin: 0 },
-          };
-        }
-      } else {
-        search = {
-          ...search,
-          specification: {
-            $elemMatch: {
-              title: filter.finder,
-              value: { $in: filter.option },
-            },
-          },
-        };
-      }
-    });
-    let sort_query: object = {};
-    if (sort == "ارزان ترین") {
-      sort_query = {
-        price: 1,
-      };
-    } else if (sort == "گران ترین") {
-      sort_query = {
-        price: -1,
-      };
-    } else if (sort == "جدید ترین") {
-      sort_query = {
-        createdAt: -1,
-      };
-    } else if (sort == "پربازدیدترین") {
-      sort_query = {
-        views: -1,
-      };
-    } else if (sort == "پرفروش ترین") {
-      sort_query = {
-        sales: -1,
-      };
-    } else {
-      sort_query = {
-        createdAt: -1,
-      };
-    }
-
-    const products = await Product.find(
-      search,
-      {},
-      {
-        limit: parseInt(limit as string),
-        skip: (parseInt(page as string) - 1) * parseInt(limit as string),
-        sort: sort_query,
-      }
+    const products = await Product.getProducts(
+      id as string,
+      filters,
+      page,
+      limit,
+      sort
     );
     res.status(200).json({
       products,
@@ -324,42 +156,13 @@ export const getProducts = async (req: Request, res: Response) => {
 export const addImage = async (req: Request, res: Response) => {
   const { id } = req.params;
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  await sharp(files.gallery[0].destination + "/" + files.gallery[0].filename)
-    .resize({
-      width: 300,
-      height: 300,
-    })
-    .toFile(
-      files.gallery[0].destination + "/thumbnail-" + files.gallery[0].filename
-    );
   try {
-    const product = await Product.findOneAndUpdate(
-      { _id: id },
-      {
-        $push: {
-          images: {
-            filename: files.gallery[0].filename,
-            thumbnail: "thumbnail-" + files.gallery[0].filename,
-          },
-        },
-      }
-    );
-    if (!product) {
-      removeFiles([
-        files.gallery[0].destination + "/" + files.gallery[0].filename,
-        files.gallery[0].destination +
-          "/thumbnail-" +
-          files.gallery[0].filename,
-      ]);
-      return res.status(404).json({
-        message: "محصول مورد نظر یافت نشد",
-      });
-    }
+    const gallery = await makeThumbnail(files.gallery);
+    await Product.addImage(id, gallery[0]);
     res.status(200).json({
       message: "تصویر با موفقیت اضافه شد",
     });
   } catch (err) {
-    console.log(err);
     removeFiles([
       files.gallery[0].destination + "/" + files.gallery[0].filename,
       files.gallery[0].destination + "/thumbnail-" + files.gallery[0].filename,
@@ -374,27 +177,7 @@ export const deleteImage = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { filename } = req.body;
   try {
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({
-        message: "محصول مورد نظر یافت نشد",
-      });
-    }
-    if (product.images.length === 1) {
-      return res.status(400).json({
-        message: "حداقل یک تصویر باید وجود داشته باشد",
-      });
-    }
-    const index = product.images.findIndex(
-      (image: any) => image.filename === filename
-    );
-    if (index === -1) {
-      return res.status(404).json({
-        message: "تصویر مورد نظر یافت نشد",
-      });
-    }
-    product.images.splice(index, 1);
-    await product.save();
+    await Product.deleteImage(id, filename);
     removeFiles([
       `/public/images/products/${filename}`,
       `/public/images/products/thumbnail-${filename}`,

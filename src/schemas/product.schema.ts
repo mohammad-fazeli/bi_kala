@@ -21,3 +21,19 @@ export const addImageSchema = object({
     gallery: array().of(object({})).required("تصویر ارائه نشده است"),
   }),
 });
+
+export const deleteImageSchema = object({
+  body: object({
+    filename: string().required("لطفا نام فایل را وارد کنید"),
+  }),
+});
+
+export const getProductSchema = object({
+  body: object({
+    id: string().required("لطفا شناسه را وارد کنید"),
+    page: number().required("شماره صفحه را وارد کنید"),
+    limit: number().required("تعداد آیتم در هر صفحه را وارد کنید"),
+    filters: array().of(object({})),
+    sort: string(),
+  }),
+});

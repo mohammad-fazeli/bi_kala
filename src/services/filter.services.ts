@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 interface Product {
   brand: string;
-  category: Array<string>;
+  categories: Array<any>;
   price: number;
   specification: Array<any>;
 }
@@ -17,7 +17,7 @@ interface Filter {
 }
 
 export const updateFilter_addProduct = async (product: Product) => {
-  for (const cat of product.category) {
+  for (const cat of product.categories) {
     const category = await Category.findById(cat);
     const filter = category.filter;
     for (const fil of filter as Array<Filter>) {
@@ -48,7 +48,7 @@ export const updateFilter_addProduct = async (product: Product) => {
 };
 
 export const updateFilter_removeProduct = async (product: Product) => {
-  for (const cat of product.category) {
+  for (const cat of product.categories) {
     const category = await Category.findById(cat);
     const filter = category.filter;
     for (const fil of filter as Array<Filter>) {

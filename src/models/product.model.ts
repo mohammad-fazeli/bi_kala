@@ -1,5 +1,37 @@
 import mongoose from "mongoose";
 
+interface comments {
+  title: string;
+  body: string;
+  rate: number;
+  reactions: { likes: number; dislikes: number };
+  username: string;
+  avatar: string;
+  date: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface productDocument extends mongoose.Document {
+  name: string;
+  brand: string;
+  categories: mongoose.Types.ObjectId[];
+  availability: boolean;
+  number: number;
+  price: number;
+  discount: number;
+  image: string;
+  gallery: { filename: string; thumbnail: string }[];
+  comments: comments[];
+  rating: { rete: number; count: number };
+  review: string;
+  specification: { title: string; value: any[] }[];
+  views: number;
+  sales: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const commentSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -19,13 +51,13 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     brand: { type: String, required: true },
-    category: { type: Array, required: true },
+    categories: { type: Array, required: true },
     availability: { type: Boolean, required: true },
     number: { type: Number, required: true },
     price: { type: Number, require: true },
     discount: { type: Number, required: true, default: 0 },
     image: { type: String, required: true },
-    images: { type: Array, required: true },
+    gallery: { type: Array, required: true },
     comments: { type: [commentSchema], required: true, default: [] },
     rating: {
       type: {

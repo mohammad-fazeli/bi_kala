@@ -33,6 +33,22 @@ class Category {
     }
     return categoryList;
   }
+  async getCategoriesId(id: string) {
+    try {
+      let ids = [];
+      const category = await this.categoryModel.findById(id);
+      ids.push(category?._id);
+      let parentId = category?.parentId;
+      while (parentId) {
+        const parent = await this.categoryModel.findById(parentId);
+        ids.push(parent?._id);
+        parentId = parent?.parentId;
+      }
+      return ids;
+    } catch (err) {
+      return null;
+    }
+  }
   async create(name: string, parent: string | null = null) {
     const category = new this.categoryModel({
       name,

@@ -11,12 +11,17 @@ import {
   addImage,
   deleteImage,
 } from "../controller/product.controller";
-import { addProductSchema, addImageSchema } from "../schemas/product.schema";
+import {
+  addProductSchema,
+  addImageSchema,
+  getProductSchema,
+  deleteImageSchema,
+} from "../schemas/product.schema";
 
 const router = express.Router();
 
 router.get("/:id", getProduct);
-router.get("/", getProducts);
+router.get("/", validate(getProductSchema), getProducts);
 router.post(
   "/",
   isAuth,
@@ -44,6 +49,12 @@ router.post(
   validate(addImageSchema),
   addImage
 );
-router.delete("/gallery/:id", isAuth, isAdmin, deleteImage);
+router.delete(
+  "/gallery/:id",
+  isAuth,
+  isAdmin,
+  validate(deleteImageSchema),
+  deleteImage
+);
 
 export default router;
