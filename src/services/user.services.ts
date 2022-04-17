@@ -66,6 +66,11 @@ class User {
     );
     return user;
   }
+  async getAddress(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new Error("User not found");
+    return user.address;
+  }
 }
 
 export default new User(UserModel);

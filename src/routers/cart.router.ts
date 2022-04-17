@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { isAuth, isAdmin } from "../utils/auth";
+import { isAuth } from "../utils/auth";
 import validate from "../middleware/validateRequest";
 import { updateItemSchema } from "../schemas/cart.schema";
 import {

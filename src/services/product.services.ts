@@ -187,6 +187,18 @@ class Product {
     await product.save();
     return product;
   }
+  async reduce(products: { id: string; quantity: number }[]) {
+    for (const product of products) {
+      const productToReduce = await this.productModel.findById(product.id);
+      if (productToReduce) {
+        productToReduce.number -= product.quantity;
+        if (productToReduce.number <= 0) {
+          productToReduce.availability = false;
+        }
+        await productToReduce.save();
+      }
+    }
+  }
 }
 
 export default new Product(ProductModel);

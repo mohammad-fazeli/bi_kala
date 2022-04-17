@@ -1,5 +1,32 @@
 import mongoose from "mongoose";
 
+export interface OrderDocument extends mongoose.Document {
+  amount: number;
+  userId: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    alley: string;
+    houseNumber: string;
+  };
+  items: {
+    id: string;
+    quantity: number;
+    name: string;
+    price: number;
+    discount: number;
+    image: string;
+  }[];
+  paymentType: string;
+  paid: boolean;
+  paying: boolean;
+  delivery: boolean;
+  canceled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const OrderSchema = new mongoose.Schema(
   {
     amount: { type: Number, required: true },
@@ -35,6 +62,14 @@ const OrderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+OrderSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 600,
+    partialFilterExpression: { paid: false, paymentType: "online" },
   }
 );
 

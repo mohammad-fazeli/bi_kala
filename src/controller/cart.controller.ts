@@ -1,5 +1,4 @@
 import { Response } from "express";
-import Product from "../models/product.model";
 import Cart from "../services/cart.services";
 
 export const addItem = async (req: any, res: Response) => {
