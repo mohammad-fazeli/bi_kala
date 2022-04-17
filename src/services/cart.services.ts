@@ -74,6 +74,13 @@ class Cart {
     await user.save();
     return user.cart;
   }
+  async clear(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new Error("User not found");
+    user.cart = [];
+    await user.save();
+    return user.cart;
+  }
 }
 
 export default new Cart(User);
